@@ -1,8 +1,11 @@
 use std::rc::Rc;
 use yew::prelude::*;
 use yew::{agent::Dispatcher, services::reader::*};
+use yew_router::agent::RouteRequest;
+use yew_router::prelude::*;
 
 use crate::agents::{event_bus::*, ImageHashWorker};
+use crate::app::AppRoute;
 use crate::components::BlobUrl;
 
 pub type HashCallback = Callback<anyhow::Result<i64>>;
@@ -16,7 +19,8 @@ pub struct ImageHash {
 
     task: Option<ReaderTask>,
 
-    onhash: HashCallback,
+    redirect: bool,
+    onhash: Option<HashCallback>,
     onimage: Option<ImageCallback>,
 }
 
@@ -29,7 +33,9 @@ pub enum Msg {
 
 #[derive(Clone, Properties)]
 pub struct Props {
-    pub onhash: HashCallback,
+    pub redirect: bool,
+    #[prop_or_default]
+    pub onhash: Option<HashCallback>,
     #[prop_or_default]
     pub onimage: Option<ImageCallback>,
 }
@@ -47,6 +53,7 @@ impl Component for ImageHash {
             hasher: ImageHashWorker::bridge(callback),
             event_bus: EventBus::dispatcher(),
             task: None,
+            redirect: props.redirect,
             onhash: props.onhash,
             onimage: props.onimage,
         }
@@ -63,7 +70,18 @@ impl Component for ImageHash {
         log::trace!("ImageHash had update: {:?}", msg);
 
         match msg {
-            Msg::Hash(hash) => self.onhash.emit(hash),
+            Msg::Hash(hash) => {
+                if self.redirect {
+                    if let Ok(hash) = hash {
+                        let route = Route::<()>::from(AppRoute::Results(hash));
+                        RouteAgent::dispatcher().send(RouteRequest::ChangeRoute(route));
+                    }
+                }
+
+                if let Some(onhash) = &self.onhash {
+                    onhash.emit(hash)
+                }
+            }
             Msg::FileBytes(bytes) => self.hasher.send(bytes.content),
             Msg::FileSelected(file) => {
                 let blob_url = Rc::new(BlobUrl::new(&file));
@@ -71,6 +89,10 @@ impl Component for ImageHash {
                 let callback = self.link.callback(Msg::FileBytes);
                 let task = self.reader.read_file(file, callback).unwrap();
                 self.task = Some(task);
+
+                if let Some(onimage) = &self.onimage {
+                    onimage.emit(())
+                }
 
                 self.event_bus.send(Request::SetState(State {
                     blob_url: Some(blob_url),
