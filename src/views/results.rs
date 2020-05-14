@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use yew::services::fetch::FetchTask;
 
-use crate::components::result;
+use crate::components::{result, ImagePreview};
 use crate::services::fuzzysearch::{FuzzySearchService, SourceFile};
 
 pub struct Results {
@@ -27,6 +27,10 @@ impl Results {
         html! {
             <div>
                 <p>{ format!("Found {} results", results.len()) }</p>
+
+                <div>
+                    <ImagePreview />
+                </div>
 
                 <div>
                 { results.iter().map(result).collect::<Html>() }

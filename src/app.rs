@@ -1,6 +1,8 @@
+use yew::agent::Dispatcher;
 use yew::prelude::*;
 use yew_router::{prelude::*, switch::Permissive, Switch};
 
+use crate::agents::event_bus::EventBus;
 use crate::components::Navbar;
 use crate::views::*;
 
@@ -22,7 +24,9 @@ pub enum AppRoute {
     Index,
 }
 
-pub struct Model;
+pub struct Model {
+    _event_bus: Dispatcher<EventBus>,
+}
 
 impl Model {
     fn render(switch: AppRoute) -> Html {
@@ -45,7 +49,9 @@ impl Component for Model {
     type Properties = ();
 
     fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        Model
+        let _event_bus = EventBus::dispatcher();
+
+        Model { _event_bus }
     }
 
     fn update(&mut self, _msg: Self::Message) -> ShouldRender {

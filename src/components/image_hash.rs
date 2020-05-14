@@ -1,7 +1,9 @@
+use std::rc::Rc;
 use yew::prelude::*;
-use yew::services::reader::*;
+use yew::{agent::Dispatcher, services::reader::*};
 
-use crate::agents::ImageHashWorker;
+use crate::agents::{event_bus::*, ImageHashWorker};
+use crate::components::BlobUrl;
 
 pub type HashCallback = Callback<anyhow::Result<i64>>;
 pub type ImageCallback = Callback<()>;
@@ -10,6 +12,7 @@ pub struct ImageHash {
     link: ComponentLink<Self>,
     reader: ReaderService,
     hasher: Box<dyn Bridge<ImageHashWorker>>,
+    event_bus: Dispatcher<EventBus>,
 
     task: Option<ReaderTask>,
 
@@ -42,6 +45,7 @@ impl Component for ImageHash {
             link,
             reader: ReaderService::new(),
             hasher: ImageHashWorker::bridge(callback),
+            event_bus: EventBus::dispatcher(),
             task: None,
             onhash: props.onhash,
             onimage: props.onimage,
@@ -62,9 +66,15 @@ impl Component for ImageHash {
             Msg::Hash(hash) => self.onhash.emit(hash),
             Msg::FileBytes(bytes) => self.hasher.send(bytes.content),
             Msg::FileSelected(file) => {
+                let blob_url = Rc::new(BlobUrl::new(&file));
+
                 let callback = self.link.callback(Msg::FileBytes);
                 let task = self.reader.read_file(file, callback).unwrap();
                 self.task = Some(task);
+
+                self.event_bus.send(Request::SetState(State {
+                    blob_url: Some(blob_url),
+                }));
             }
         }
 
