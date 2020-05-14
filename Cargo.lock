@@ -187,9 +187,9 @@ checksum = "bb1f6b1ce1c140482ea30ddd3335fc0024ac7ee112895426e0a629a6c20adfe3"
 
 [[package]]
 name = "fnv"
-version = "1.0.6"
+version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2fad85553e09a6f881f739c29f0b00b0f01357c743266d478b68951ce23285f3"
+checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
 name = "futures"
@@ -294,6 +294,7 @@ dependencies = [
  "hamming",
  "image",
  "img_hash",
+ "js-sys",
  "log",
  "serde",
  "wasm-bindgen",
@@ -1025,8 +1026,8 @@ checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
 
 [[package]]
 name = "yew"
-version = "0.16.1"
-source = "git+https://github.com/yewstack/yew#bc116a42d9f902a14962e556ee86ce83e9d6879a"
+version = "0.16.2"
+source = "git+https://github.com/yewstack/yew#244ac3bdc8c1eb06854189e32bd4f5c752b4f259"
 dependencies = [
  "anyhow",
  "anymap",
@@ -1056,7 +1057,7 @@ dependencies = [
 [[package]]
 name = "yew-macro"
 version = "0.16.1"
-source = "git+https://github.com/yewstack/yew#bc116a42d9f902a14962e556ee86ce83e9d6879a"
+source = "git+https://github.com/yewstack/yew#244ac3bdc8c1eb06854189e32bd4f5c752b4f259"
 dependencies = [
  "boolinator",
  "lazy_static",
@@ -1069,7 +1070,7 @@ dependencies = [
 [[package]]
 name = "yew-router"
 version = "0.12.1"
-source = "git+https://github.com/yewstack/yew#bc116a42d9f902a14962e556ee86ce83e9d6879a"
+source = "git+https://github.com/yewstack/yew#244ac3bdc8c1eb06854189e32bd4f5c752b4f259"
 dependencies = [
  "cfg-if",
  "cfg-match",
@@ -1089,7 +1090,7 @@ dependencies = [
 [[package]]
 name = "yew-router-macro"
 version = "0.12.0"
-source = "git+https://github.com/yewstack/yew#bc116a42d9f902a14962e556ee86ce83e9d6879a"
+source = "git+https://github.com/yewstack/yew#244ac3bdc8c1eb06854189e32bd4f5c752b4f259"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1100,7 +1101,7 @@ dependencies = [
 [[package]]
 name = "yew-router-route-parser"
 version = "0.12.0"
-source = "git+https://github.com/yewstack/yew#bc116a42d9f902a14962e556ee86ce83e9d6879a"
+source = "git+https://github.com/yewstack/yew#244ac3bdc8c1eb06854189e32bd4f5c752b4f259"
 dependencies = [
  "nom",
 ]

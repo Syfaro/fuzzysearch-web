@@ -27,7 +27,7 @@ pub struct Model;
 impl Model {
     fn render(switch: AppRoute) -> Html {
         match switch {
-            AppRoute::Index => html! { <h1>{ "Index" }</h1> },
+            AppRoute::Index => html! { <Index /> },
             AppRoute::About => html! { <h1>{ "About" }</h1> },
             AppRoute::ApiDocs => html! { <h1>{ "API Docs" }</h1> },
             AppRoute::Results(hash) => html! { <Results hash=hash /> },

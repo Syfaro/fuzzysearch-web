@@ -109,7 +109,7 @@ impl FuzzySearchService {
             }
 
             let items = data.map(|files| {
-                files
+                let mut files: Vec<_> = files
                     .into_iter()
                     .map(|file| {
                         let hash = match &file.hash {
@@ -123,7 +123,16 @@ impl FuzzySearchService {
 
                         SourceFile { distance, ..file }
                     })
-                    .collect()
+                    .collect();
+
+                files.sort_by(|a, b| {
+                    a.distance
+                        .unwrap_or(u64::max_value())
+                        .partial_cmp(&b.distance.unwrap_or(u64::max_value()))
+                        .unwrap()
+                });
+
+                files
             });
 
             callback.emit(items)

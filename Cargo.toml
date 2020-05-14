@@ -15,6 +15,7 @@ anyhow = "1"
 
 yew = { git = "https://github.com/yewstack/yew" }
 yew-router = { git = "https://github.com/yewstack/yew" }
+js-sys = "0.3"
 
 img_hash = "3"
 image = { version = "0.23", default-features = false, features = ["jpeg", "png", "webp"] }
