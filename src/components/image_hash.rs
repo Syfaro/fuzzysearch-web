@@ -16,8 +16,10 @@ pub struct ImageHash {
     reader: ReaderService,
     hasher: Box<dyn Bridge<ImageHashWorker>>,
     event_bus: Dispatcher<EventBus>,
+    _producer: Box<dyn Bridge<EventBus>>,
 
     task: Option<ReaderTask>,
+    blob_url: Option<Rc<BlobUrl>>,
 
     redirect: bool,
     onhash: Option<HashCallback>,
@@ -29,6 +31,7 @@ pub enum Msg {
     FileSelected(File),
     FileBytes(FileData),
     Hash(anyhow::Result<i64>),
+    NewState(State),
 }
 
 #[derive(Clone, Properties)]
@@ -45,14 +48,19 @@ impl Component for ImageHash {
     type Properties = Props;
 
     fn create(props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let callback = link.callback(Msg::NewState);
+        let _producer = EventBus::bridge(callback);
+
         let callback = link.callback(Msg::Hash);
 
         Self {
             link,
+            _producer,
             reader: ReaderService::new(),
             hasher: ImageHashWorker::bridge(callback),
             event_bus: EventBus::dispatcher(),
             task: None,
+            blob_url: None,
             redirect: props.redirect,
             onhash: props.onhash,
             onimage: props.onimage,
@@ -67,8 +75,6 @@ impl Component for ImageHash {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        log::trace!("ImageHash had update: {:?}", msg);
-
         match msg {
             Msg::Hash(hash) => {
                 if self.redirect {
@@ -85,6 +91,7 @@ impl Component for ImageHash {
             Msg::FileBytes(bytes) => self.hasher.send(bytes.content),
             Msg::FileSelected(file) => {
                 let blob_url = Rc::new(BlobUrl::new(&file));
+                self.blob_url = Some(blob_url.clone());
 
                 let callback = self.link.callback(Msg::FileBytes);
                 let task = self.reader.read_file(file, callback).unwrap();
@@ -98,14 +105,28 @@ impl Component for ImageHash {
                     blob_url: Some(blob_url),
                 }));
             }
+            Msg::NewState(state) => {
+                self.blob_url = state.blob_url;
+                return true;
+            }
         }
 
         false
     }
 
     fn view(&self) -> Html {
+        let label = if let Some(blob_url) = &self.blob_url {
+            html! {
+                <span class="file-name">
+                    { &blob_url.name }
+                </span>
+            }
+        } else {
+            html! {}
+        };
+
         html! {
-            <div class="file">
+            <div class="file has-name">
                 <label class="file-label has-background-light">
                     <input class="file-input" type="file" accept="image/*" onchange=self.link.callback(change) />
                     <span class="file-cta">
@@ -116,6 +137,7 @@ impl Component for ImageHash {
                             { "Browse" }
                         </span>
                     </span>
+                    { label }
                 </label>
             </div>
         }

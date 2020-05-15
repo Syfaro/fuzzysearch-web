@@ -4,12 +4,22 @@ use yew::services::fetch::FetchTask;
 use crate::components::{result, ImageHash, ImagePreview};
 use crate::services::fuzzysearch::{FuzzySearchService, SourceFile};
 
+const DISTANCE_THRESHOLD: u64 = 3;
+
+struct ResultItems {
+    count: usize,
+    good: Html,
+    bad: Html,
+}
+
 pub struct Results {
     link: ComponentLink<Self>,
     fuzzysearch: FuzzySearchService,
 
     task: Option<FetchTask>,
-    results: Option<anyhow::Result<Vec<SourceFile>>>,
+    items: Option<anyhow::Result<ResultItems>>,
+
+    show_alts: bool,
 }
 
 #[derive(Debug)]
@@ -23,30 +33,55 @@ pub struct Props {
 }
 
 impl Results {
-    fn results(results: &[SourceFile]) -> Html {
+    fn results(&self, results: &ResultItems) -> Html {
+        let mut items = vec![results.good.clone()];
+
+        if self.show_alts {
+            items.push(results.bad.clone());
+        }
+
+        let items = items.into_iter().collect::<Html>();
+
         html! {
             <div>
-                <p>{ format!("Found {} results", results.len()) }</p>
+                <p>{ format!("Found {} results", results.count) }</p>
 
                 <div>
-                    <ImageHash redirect=true />
-                    <ImagePreview />
-                </div>
-
-                <div>
-                { results.iter().map(result).collect::<Html>() }
+                    { items }
                 </div>
             </div>
         }
     }
 
     fn load(&mut self, hash: i64) {
-        self.results = None;
+        self.items = None;
 
         let task = self
             .fuzzysearch
             .hashes(hash, self.link.callback(Msg::Results));
         self.task = Some(task);
+    }
+
+    fn process_results(results: &[SourceFile]) -> ResultItems {
+        // Create Vecs with capacity of some reasonable result assumptions.
+        let mut good = Vec::with_capacity(3);
+        let mut bad = Vec::with_capacity(results.len());
+
+        for item in results {
+            let rendered = result(item);
+
+            if item.distance.unwrap_or(u64::max_value()) <= DISTANCE_THRESHOLD {
+                good.push(rendered);
+            } else {
+                bad.push(rendered);
+            }
+        }
+
+        ResultItems {
+            count: results.len(),
+            good: good.into_iter().collect::<Html>(),
+            bad: bad.into_iter().collect::<Html>(),
+        }
     }
 }
 
@@ -61,7 +96,8 @@ impl Component for Results {
             link,
             fuzzysearch,
             task: None,
-            results: None,
+            items: None,
+            show_alts: false,
         };
 
         results.load(props.hash);
@@ -77,21 +113,36 @@ impl Component for Results {
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
         match msg {
-            Msg::Results(results) => self.results = Some(results),
+            Msg::Results(results) => {
+                self.items = Some(results.map(|results| Self::process_results(&results)))
+            }
         }
 
         true
     }
 
     fn view(&self) -> Html {
-        match &self.results {
+        let items = match &self.items {
             None => html! {
                 <h2>{ "Loading..." }</h2>
             },
             Some(Err(err)) => html! {
                 <h2>{ format!("Error loading results: {}", err) }</h2>
             },
-            Some(Ok(results)) => Self::results(results),
+            Some(Ok(results)) => self.results(results),
+        };
+
+        html! {
+            <div class="columns">
+                <div class="column">
+                    <ImageHash redirect=true />
+                    <ImagePreview />
+                </div>
+
+                <div class="column">
+                    { items }
+                </div>
+            </div>
         }
     }
 }

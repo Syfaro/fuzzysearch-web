@@ -1,5 +1,6 @@
 use yew::prelude::*;
 
+use crate::agents::event_bus::*;
 use crate::components::ImageHash;
 
 pub struct Index;
@@ -9,6 +10,8 @@ impl Component for Index {
     type Properties = ();
 
     fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
+        EventBus::dispatcher().send(Request::SetState(State { blob_url: None }));
+
         Self
     }
 

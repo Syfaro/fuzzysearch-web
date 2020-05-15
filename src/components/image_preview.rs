@@ -5,26 +5,31 @@ use yew::{agent::Bridged, services::reader::File};
 use crate::agents::event_bus::*;
 
 #[derive(Debug)]
-pub struct BlobUrl(String);
+pub struct BlobUrl {
+    pub blob_url: String,
+    pub name: String,
+}
 
 impl BlobUrl {
     pub fn new(file: &File) -> Self {
-        let url = yew::web_sys::Url::create_object_url_with_blob(&file).unwrap();
-        log::trace!("Created new BlobUrl: {}", url);
-        Self(url)
+        let name = file.name();
+        let blob_url = yew::web_sys::Url::create_object_url_with_blob(&file).unwrap();
+        log::debug!("Created new BlobUrl: {}", blob_url);
+
+        Self { blob_url, name }
     }
 }
 
 impl Drop for BlobUrl {
     fn drop(&mut self) {
-        log::trace!("Revoking BlobUrl: {}", self.0);
-        yew::web_sys::Url::revoke_object_url(&self.0).unwrap();
+        log::debug!("Revoking BlobUrl: {}", self.blob_url);
+        yew::web_sys::Url::revoke_object_url(&self.blob_url).unwrap();
     }
 }
 
 impl ToString for BlobUrl {
     fn to_string(&self) -> String {
-        self.0.clone()
+        self.blob_url.clone()
     }
 }
 
@@ -57,8 +62,6 @@ impl Component for ImagePreview {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        log::debug!("ImagePreview got update: {:?}", msg);
-
         match msg {
             Msg::NewState(state) => self.blob_url = state.blob_url,
         }
@@ -69,7 +72,7 @@ impl Component for ImagePreview {
     fn view(&self) -> Html {
         let url = match &self.blob_url {
             Some(url) => url,
-            None => return html! { <h2>{ "No image selected" }</h2> },
+            None => return html! {},
         };
 
         html! {

@@ -63,8 +63,6 @@ impl Component for Model {
     }
 
     fn view(&self) -> Html {
-        log::debug!("Rendering Model");
-
         html! {
             <div>
                 <Navbar />

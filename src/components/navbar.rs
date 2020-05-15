@@ -35,8 +35,6 @@ impl Component for Navbar {
     }
 
     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        log::trace!("Navbar update: {:?}", msg);
-
         match msg {
             Msg::RouteChanged(route) => self.route = Some(route),
         }

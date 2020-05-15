@@ -28,8 +28,6 @@ impl Agent for EventBus {
     type Output = State;
 
     fn create(link: AgentLink<Self>) -> Self {
-        log::debug!("Created EventBus");
-
         Self {
             link,
             subscribers: HashSet::new(),
