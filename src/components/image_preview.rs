@@ -76,7 +76,7 @@ impl Component for ImagePreview {
         };
 
         html! {
-            <figure class="image">
+            <figure class="image is-hidden-mobile">
                 <img src=url />
             </figure>
         }

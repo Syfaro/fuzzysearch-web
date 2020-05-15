@@ -10,7 +10,7 @@ impl Component for Index {
     type Properties = ();
 
     fn create(_props: Self::Properties, _link: ComponentLink<Self>) -> Self {
-        EventBus::dispatcher().send(Request::SetState(State { blob_url: None }));
+        EventBus::dispatcher().send(Request::ClearState);
 
         Self
     }
@@ -25,11 +25,15 @@ impl Component for Index {
 
     fn view(&self) -> Html {
         html! {
-            <div>
-                <div>
-                    <ImageHash redirect=true />
+            <section class="section">
+                <div class="container">
+                    <div class="columns">
+                        <div class="column is-one-third">
+                            <ImageHash redirect=true />
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </section>
         }
     }
 }

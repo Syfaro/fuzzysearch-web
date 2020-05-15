@@ -1,3 +1,4 @@
+use instant::Instant;
 use serde::Deserialize;
 use yew::{
     callback::Callback,
@@ -84,6 +85,12 @@ pub struct FuzzySearchService {
     web: FetchService,
 }
 
+#[derive(Debug)]
+pub struct HashResult {
+    pub items: anyhow::Result<Vec<SourceFile>>,
+    pub duration: u128,
+}
+
 impl FuzzySearchService {
     const API_ENDPOINT: &'static str = "https://api.fuzzysearch.net";
     const API_KEY: &'static str = "eluIOaOhIP1RXlgYetkcZCF8la7p3NoCPy8U0i8dKiT4xdIH";
@@ -94,18 +101,19 @@ impl FuzzySearchService {
         }
     }
 
-    pub fn hashes(
-        &mut self,
-        hash: i64,
-        callback: Callback<anyhow::Result<Vec<SourceFile>>>,
-    ) -> FetchTask {
+    pub fn hashes(&mut self, hash: i64, callback: Callback<HashResult>) -> FetchTask {
         let url = format!("{}/hashes?hashes={}", Self::API_ENDPOINT, hash);
         let bytes = hash.to_be_bytes();
+
+        let start = Instant::now();
 
         let handler = move |r: Response<Json<anyhow::Result<Vec<SourceFile>>>>| {
             let (meta, Json(data)) = r.into_parts();
             if !meta.status.is_success() {
-                return callback.emit(Err(anyhow::anyhow!("bad request: {}", meta.status)));
+                return callback.emit(HashResult {
+                    items: Err(anyhow::anyhow!("bad request: {}", meta.status)),
+                    duration: start.elapsed().as_millis(),
+                });
             }
 
             let items = data.map(|files| {
@@ -135,7 +143,9 @@ impl FuzzySearchService {
                 files
             });
 
-            callback.emit(items)
+            let duration = start.elapsed().as_millis();
+
+            callback.emit(HashResult { items, duration })
         };
 
         let request = Request::get(url.as_str())

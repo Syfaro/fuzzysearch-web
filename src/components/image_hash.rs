@@ -55,12 +55,14 @@ impl Component for ImageHash {
 
         Self {
             link,
-            _producer,
             reader: ReaderService::new(),
             hasher: ImageHashWorker::bridge(callback),
             event_bus: EventBus::dispatcher(),
+            _producer,
+
             task: None,
             blob_url: None,
+
             redirect: props.redirect,
             onhash: props.onhash,
             onimage: props.onimage,
@@ -84,6 +86,14 @@ impl Component for ImageHash {
                     }
                 }
 
+                let latest_hash = if let Ok(hash) = hash {
+                    Some(hash)
+                } else {
+                    None
+                };
+
+                self.event_bus.send(Request::SetLatestHash(latest_hash));
+
                 if let Some(onhash) = &self.onhash {
                     onhash.emit(hash)
                 }
@@ -101,9 +111,7 @@ impl Component for ImageHash {
                     onimage.emit(())
                 }
 
-                self.event_bus.send(Request::SetState(State {
-                    blob_url: Some(blob_url),
-                }));
+                self.event_bus.send(Request::SetBlobUrl(Some(blob_url)));
             }
             Msg::NewState(state) => {
                 self.blob_url = state.blob_url;
@@ -126,19 +134,29 @@ impl Component for ImageHash {
         };
 
         html! {
-            <div class="file has-name">
-                <label class="file-label has-background-light">
-                    <input class="file-input" type="file" accept="image/*" onchange=self.link.callback(change) />
-                    <span class="file-cta">
-                        <span class="file-icon">
-                            <i class="fas fa-upload"></i>
+            <div class="box">
+                <h2 class="is-size-5">
+                    { "Upload local file" }
+                </h2>
+
+                <div class="file has-name">
+                    <label class="file-label has-background-light">
+                        <input class="file-input" type="file" accept="image/*" onchange=self.link.callback(change) />
+                        <span class="file-cta">
+                            <span class="file-icon">
+                                <i class="fas fa-upload"></i>
+                            </span>
+                            <span class="file-label">
+                                { "Browse" }
+                            </span>
                         </span>
-                        <span class="file-label">
-                            { "Browse" }
-                        </span>
-                    </span>
-                    { label }
-                </label>
+                        { label }
+                    </label>
+                </div>
+
+                <p class="is-size-7 has-text-grey">
+                    { "Supported formats: jpeg, png, webp" }
+                </p>
             </div>
         }
     }

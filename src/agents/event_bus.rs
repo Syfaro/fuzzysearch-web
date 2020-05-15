@@ -7,11 +7,14 @@ use crate::components::BlobUrl;
 #[derive(Clone, Debug, Default)]
 pub struct State {
     pub blob_url: Option<Rc<BlobUrl>>,
+    pub latest_hash: Option<i64>,
 }
 
 #[derive(Debug)]
 pub enum Request {
-    SetState(State),
+    ClearState,
+    SetBlobUrl(Option<Rc<BlobUrl>>),
+    SetLatestHash(Option<i64>),
 }
 
 pub struct EventBus {
@@ -42,13 +45,13 @@ impl Agent for EventBus {
         log::debug!("Got input on EventBus: {:?}", msg);
 
         match msg {
-            Request::SetState(state) => {
-                for sub in &self.subscribers {
-                    self.link.respond(*sub, state.clone());
-                }
+            Request::ClearState => self.state = State::default(),
+            Request::SetBlobUrl(blob_url) => self.state.blob_url = blob_url,
+            Request::SetLatestHash(hash) => self.state.latest_hash = hash,
+        }
 
-                self.state = state;
-            }
+        for sub in &self.subscribers {
+            self.link.respond(*sub, self.state.clone());
         }
     }
 
