@@ -1,0 +1,24 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+- name: build
+  pull: always
+  image: rust:slim
+  commands:
+  - apt-get update -y
+  - apt-get install -y curl gnupg
+  - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+  - echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+  - apt-get update -y
+  - apt-get install -y yarn
+  - yarn install
+  - yarn run build
+
+...
