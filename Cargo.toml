@@ -4,6 +4,8 @@ version = "0.1.0"
 authors = ["Syfaro <syfaro@huefox.com>"]
 edition = "2018"
 license = "MIT"
+repository = "https://github.com/Syfaro/fuzzysearch-web"
+description = "Web UI for FuzzySearch"
 
 [lib]
 crate-type = ["cdylib"]
